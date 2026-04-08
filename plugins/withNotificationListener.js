@@ -9,6 +9,7 @@
 const {
   withAndroidManifest,
   withDangerousMod,
+  withMainApplication,
 } = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
@@ -56,11 +57,6 @@ function addNotificationListenerService(config) {
       });
     }
 
-    // Register the bridge module
-    if (!app.service.some((s) => s.$?.['android:name'] === '.NotificationBridgeModule')) {
-      // Bridge is exposed as a ReactPackage, not a service — no extra manifest entry needed
-    }
-
     return mod;
   });
 }
@@ -101,8 +97,28 @@ function copyNativeFiles(config) {
   ]);
 }
 
+// ── 3. Modify MainApplication to register the Native Module ──
+function registerPackage(config) {
+  return withMainApplication(config, (config) => {
+    let mainApp = config.modResults.contents;
+    
+    // Inject the add(NotificationBridgePackage()) into the .apply block of getPackages()
+    if (!mainApp.includes('add(NotificationBridgePackage())')) {
+      // Find the apply block in Kotlin
+      mainApp = mainApp.replace(
+        '// add(MyReactNativePackage())',
+        '// add(MyReactNativePackage())\n              add(NotificationBridgePackage())'
+      );
+    }
+
+    config.modResults.contents = mainApp;
+    return config;
+  });
+}
+
 module.exports = function withNotificationListener(config) {
   config = addNotificationListenerService(config);
   config = copyNativeFiles(config);
+  config = registerPackage(config);
   return config;
 };
