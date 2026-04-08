@@ -22,6 +22,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.antigravity.agent",
+      "googleServicesFile": "./google-services.json",
       "permissions": []
     },
     "web": {
@@ -29,7 +30,20 @@
     },
     "plugins": [
       "./plugins/withNotificationListener",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#8b5cf6",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1ff9c40b-44cd-4e24-8e91-eb87aef54574"
+      }
+    }
   }
 }
