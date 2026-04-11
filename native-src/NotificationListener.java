@@ -141,22 +141,15 @@ public class NotificationListener extends NotificationListenerService {
         return instance != null;
     }
 
-    /**
-     * Send an event to React Native via DeviceEventEmitter.
-     */
     private void sendEvent(String eventName, WritableMap params) {
         try {
-            ReactApplication app = (ReactApplication) getApplication();
-            ReactInstanceManager manager = app.getReactNativeHost().getReactInstanceManager();
-            ReactContext context = manager.getCurrentReactContext();
-
-            if (context != null) {
-                context
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit(eventName, params);
-            }
+            android.content.Intent intent = new android.content.Intent("com.antigravity.agent.NOTIFICATION_EVENT");
+            intent.putExtra("eventName", eventName);
+            Bundle bundle = Arguments.toBundle(params);
+            intent.putExtras(bundle);
+            sendBroadcast(intent);
         } catch (Exception e) {
-            Log.e(TAG, "Error sending event to RN: " + eventName, e);
+            Log.e(TAG, "Error broadcasting intent: " + eventName, e);
         }
     }
 

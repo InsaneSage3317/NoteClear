@@ -4,7 +4,7 @@
 // running in Expo Go (where native modules aren't available).
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
+import { NativeModules, DeviceEventEmitter, Platform } from 'react-native';
 
 const { NotificationBridge } = NativeModules || {};
 
@@ -54,9 +54,7 @@ export function useNotificationListener(onNotification) {
   useEffect(() => {
     if (!isAvailable || !isPermitted) return;
 
-    const emitter = new NativeEventEmitter(NotificationBridge);
-
-    const postSub = emitter.addListener('onNotificationPosted', (data) => {
+    const postSub = DeviceEventEmitter.addListener('onNotificationPosted', (data) => {
       if (callbackRef.current) {
         callbackRef.current({
           id: data.id,

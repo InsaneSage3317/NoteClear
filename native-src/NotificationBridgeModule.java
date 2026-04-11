@@ -27,9 +27,38 @@ import com.facebook.react.bridge.ReactMethod;
 public class NotificationBridgeModule extends ReactContextBaseJavaModule {
 
     private static final String TAG = "AntigravityBridge";
+    public static ReactApplicationContext reactContext;
+
+    private android.content.BroadcastReceiver receiver;
 
     public NotificationBridgeModule(ReactApplicationContext context) {
         super(context);
+        reactContext = context;
+
+        receiver = new android.content.BroadcastReceiver() {
+            @Override
+            public void onReceive(android.content.Context ctx, android.content.Intent intent) {
+                try {
+                    String eventName = intent.getStringExtra("eventName");
+                    android.os.Bundle bundle = intent.getExtras();
+                    if (bundle != null && eventName != null) {
+                        bundle.remove("eventName");
+                        com.facebook.react.bridge.WritableMap params = com.facebook.react.bridge.Arguments.fromBundle(bundle);
+                        reactContext
+                            .getJSModule(com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                            .emit(eventName, params);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error emitting event from receiver", e);
+                }
+            }
+        };
+        android.content.IntentFilter filter = new android.content.IntentFilter("com.antigravity.agent.NOTIFICATION_EVENT");
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            context.registerReceiver(receiver, filter, android.content.Context.RECEIVER_EXPORTED);
+        } else {
+            context.registerReceiver(receiver, filter);
+        }
     }
 
     @NonNull

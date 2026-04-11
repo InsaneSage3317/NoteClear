@@ -44,7 +44,7 @@ function addNotificationListenerService(config) {
       app.service.push({
         $: {
           'android:name': '.NotificationListener',
-          'android:exported': 'false',
+          'android:exported': 'true',
           'android:permission': 'android.permission.BIND_NOTIFICATION_LISTENER_SERVICE',
         },
         'intent-filter': [
