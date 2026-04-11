@@ -28,6 +28,8 @@ import {
   orchestrate,
   agentC_findExpired,
   resetSpamTracker,
+  whitelistSender,
+  CATEGORIES,
 } from './src/agentEngine';
 import { generateNotification, generateBatch } from './src/notificationGenerator';
 import { useNotificationListener } from './src/useNotificationListener';
@@ -242,21 +244,20 @@ export default function App() {
       setAgentLogs((prev) => [...timestampedLog, ...prev].slice(0, 200));
 
       setNotifications((prev) => {
-        if (processed.dismissed) {
-          // Spam → dismiss from native notification bar too
-          if (mode === 'live' && isNativeAvailable) {
-            nativeDismiss(processed.id);
-          }
-          // Briefly show then remove
-          const updated = [processed, ...prev];
-          setTimeout(() => {
-            setNotifications((curr) =>
-              curr.filter((n) => n.id !== processed.id)
-            );
-          }, 2000);
-          return updated;
+        if (processed.dismissed && mode === 'live' && isNativeAvailable) {
+          nativeDismiss(processed.id);
         }
-        return [processed, ...prev];
+        
+        const existingIndex = prev.findIndex((n) => n.id === processed.id);
+        let updated;
+        if (existingIndex >= 0) {
+          updated = [...prev];
+          updated[existingIndex] = processed;
+        } else {
+          updated = [processed, ...prev];
+        }
+        
+        return updated.slice(0, 100);
       });
 
       setStats((prev) => {
@@ -365,6 +366,39 @@ export default function App() {
     },
     [mode, isNativeAvailable, nativeDismiss]
   );
+
+
+  // ── Handle Whitelisting/Unspamming a sender ──
+  const handleUnspam = useCallback((notification) => {
+    whitelistSender(notification.sender, notification.packageName);
+    
+    setNotifications((prev) =>
+      prev.map((notif) => {
+        if (notif.id === notification.id) {
+          return {
+            ...notif,
+            dismissed: false,
+            dismissedBy: null,
+            category: CATEGORIES.GENERAL, 
+            categoryReason: 'Restored from Spam',
+          };
+        }
+        return notif;
+      })
+    );
+
+    setAgentLogs((prev) => [
+      {
+        agent: 'A',
+        agentName: 'Spam Filter',
+        action: 'WHITELISTED',
+        detail: `Added "${notification.sender || notification.packageName}" to trusted list`,
+        ts: Date.now(),
+        notifId: notification.id,
+      },
+      ...prev,
+    ].slice(0, 200));
+  }, []);
 
   // ── Clear all ──
   const clearAll = useCallback(() => {
@@ -479,6 +513,7 @@ export default function App() {
             notifications={activeNotifs}
             dismissed={dismissedNotifs}
             onDismiss={handleDismiss}
+            onUnspam={handleUnspam}
           />
 
           <View style={styles.spacer} />

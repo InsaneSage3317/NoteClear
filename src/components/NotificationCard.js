@@ -19,7 +19,7 @@ function getCategoryBorderColor(cat) {
   return meta.color;
 }
 
-export default function NotificationCard({ notification, onDismiss, index = 0 }) {
+export default function NotificationCard({ notification, onDismiss, onUnspam, index = 0 }) {
   const cat = notification.category || CATEGORIES.GENERAL;
   const meta = getCategoryMeta(cat);
   const isDismissed = notification.dismissed;
@@ -92,12 +92,19 @@ export default function NotificationCard({ notification, onDismiss, index = 0 })
           <Text style={styles.time}>{timeAgo(notification.timestamp)}</Text>
 
           {isDismissed && notification.dismissedBy && (
-            <View style={[styles.dismissBadge]}>
-              <Text style={styles.dismissBadgeText}>
-                {notification.dismissedBy === 'Agent A' ? '🚫 Spam' :
-                 notification.dismissedBy === 'Agent C' ? '⏰ Expired' : '✕ Dismissed'}
-              </Text>
-            </View>
+            <>
+              <View style={[styles.dismissBadge]}>
+                <Text style={styles.dismissBadgeText}>
+                  {notification.dismissedBy === 'Agent A' ? '🚫 Spam' :
+                   notification.dismissedBy === 'Agent C' ? '⏰ Expired' : '✕ Dismissed'}
+                </Text>
+              </View>
+              {notification.dismissedBy === 'Agent A' && onUnspam && (
+                <TouchableOpacity style={styles.unspamBtn} onPress={() => onUnspam(notification)}>
+                  <Text style={styles.unspamBtnText}>📥 Unspam</Text>
+                </TouchableOpacity>
+              )}
+            </>
           )}
 
           {notification.confidence && !isDismissed && (
@@ -202,6 +209,17 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: theme.fontBold,
     color: theme.rose,
+  },
+  unspamBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: theme.radiusFull,
+    backgroundColor: theme.emeraldDim,
+  },
+  unspamBtnText: {
+    fontSize: 9,
+    fontWeight: theme.fontBold,
+    color: theme.emerald,
   },
   dismissBtn: {
     width: 28,

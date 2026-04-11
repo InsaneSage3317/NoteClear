@@ -33,11 +33,12 @@ function CategoryChips({ notifications }) {
   );
 }
 
-export default function NotificationList({ notifications, dismissed, onDismiss }) {
+export default function NotificationList({ notifications, dismissed, onDismiss, onUnspam }) {
   const renderItem = ({ item, index }) => (
     <NotificationCard
       notification={item}
       onDismiss={onDismiss}
+      onUnspam={onUnspam}
       index={index}
     />
   );
@@ -91,6 +92,7 @@ export default function NotificationList({ notifications, dismissed, onDismiss }
                 key={n.id}
                 notification={n}
                 onDismiss={onDismiss}
+                onUnspam={onUnspam}
                 index={i}
               />
             ))}

@@ -153,6 +153,20 @@ export function resetSpamTracker() {
   unknownSenderCounts.clear();
 }
 
+/**
+ * Whitelists a sender or package to prevent future spam false-positives.
+ */
+export function whitelistSender(sender, packageName) {
+  if (sender) {
+    const s = sender.toLowerCase();
+    if (!TRUSTED_SENDERS.includes(s)) TRUSTED_SENDERS.push(s);
+  }
+  if (packageName) {
+    const p = packageName.toLowerCase();
+    if (!TRUSTED_PACKAGES.includes(p)) TRUSTED_PACKAGES.push(p);
+  }
+}
+
 // ============================================================
 //  SUB-AGENT B  –  Categorizer
 // ============================================================
